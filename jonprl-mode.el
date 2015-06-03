@@ -48,6 +48,12 @@ to case differences."
   :type 'hook
   :group 'jonprl)
 
+(defcustom jonprl-pre-check-buffer-hook '(save-buffer)
+  "A hook to run prior to checking the buffer."
+  :type 'hook
+  :group 'jonprl
+  :options '(save-buffer))
+
 (defface jonprl-keyword-face '((t (:inherit font-lock-keyword-face)))
   "The face used to highlight JonPRL keywords."
   :group 'jonprl)
@@ -93,6 +99,7 @@ to case differences."
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."
   (interactive)
+  (run-hooks 'jonprl-pre-check-buffer-hook)
   (let* ((filename (buffer-file-name))
          (dir (file-name-directory filename))
          (file (file-name-nondirectory filename))

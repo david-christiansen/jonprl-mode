@@ -4,6 +4,7 @@
 
 ;; Author: David Raymond Christiansen <david@davidchristiansen.dk>
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
+;; Version: 0.0.1
 ;; Keywords: languages
 
 ;; This program is free software; you can redistribute it and/or modify

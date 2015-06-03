@@ -84,7 +84,7 @@ to case differences."
       (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
       ("<\\(\\w+\\)>" 1 'jonprl-name-face)
       ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face))))
-  
+
 
 (defun jonprl--compilation-buffer-name-function (_mode)
   "Compute a buffer name for the jonprl-mode compilation buffer."
@@ -102,6 +102,7 @@ to case differences."
          (compilation-buffer-name-function
           'jonprl--compilation-buffer-name-function)
          (default-directory dir))
+    (save-buffer)
     (compile command)))
 
 (defvar jonprl-mode-map

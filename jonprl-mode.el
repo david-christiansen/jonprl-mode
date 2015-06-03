@@ -80,7 +80,7 @@ to case differences."
     "isect-member-case-eq" "witness" "hypothesis" "subst" "lemma"
     "unfold" "refine" "subset-eq" "subset-intro" "subset-elim"
     "subset-member-eq" "eq-eq" "auto" "univ-eq" "void-eq"
-    "void-elim" "unit-eq" "unit-intro" "ax-eq" "mem-unfod"
+    "void-elim" "unit-eq" "unit-intro" "ax-eq" "mem-unfold"
     "assumption" "symmetry" "hyp-eq")
   "A list of the tactics to be highlighted in JonPRL mode.")
 
@@ -90,7 +90,7 @@ to case differences."
       (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
       ("<\\(\\w+\\)>" 1 'jonprl-name-face)
       ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face))))
-  
+
 
 (defun jonprl--compilation-buffer-name-function (_mode)
   "Compute a buffer name for the jonprl-mode compilation buffer."

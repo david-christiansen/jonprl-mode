@@ -1,0 +1,13 @@
+* JonPRL Mode for Emacs
+
+This is a simple major mode for the [[https://github.com/jonsterling/JonPRL][JonPRL]] implementation of
+computational type theory.
+
+Features:
+ * Completion for keywords
+ * IMenu
+ * Simple syntax highlighting
+ * Run JonPRL in compilation mode (bound to =C-c C-l=)
+
+To install, arrange for =jonprl-mode.el= to be on your =load-path= and
+then require it.

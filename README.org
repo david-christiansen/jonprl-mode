@@ -11,3 +11,6 @@ Features:
 
 To install, arrange for =jonprl-mode.el= to be on your =load-path= and
 then require it.
+
+You may need to customize =jonprl-path= if the =jonprl= binary isn't
+already on your PATH.

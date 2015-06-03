@@ -142,7 +142,7 @@ to case differences."
 Invokes `jonprl-mode-hook'."
   (setq-local font-lock-defaults (jonprl-font-lock-defaults))
   (setq-local imenu-generic-expression
-              '(("Definitions" "\\(\\w+\\)\\s-+=def=" 1)
+              '(("Definitions" "^\\s-*\\(\\w+\\)\\s-+=def=" 1)
                 ("Theorems" "Theorem\\s-+\\(\\w+\\)" 1)))
   (setq-local indent-tabs-mode nil)
   (setq-local tab-width 2)

@@ -103,7 +103,7 @@ to case differences."
   (let* ((filename (buffer-file-name))
          (dir (file-name-directory filename))
          (file (file-name-nondirectory filename))
-         (command (concat jonprl-path " " file))
+         (command (concat jonprl-path " --check " file))
 
          ;; Emacs compile config stuff - these are special vars
          (compilation-buffer-name-function

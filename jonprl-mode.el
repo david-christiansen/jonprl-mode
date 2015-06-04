@@ -3,7 +3,7 @@
 ;; Copyright (C) 2015  David Raymond Christiansen
 
 ;; Author: David Raymond Christiansen <david@davidchristiansen.dk>
-;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
 ;; Version: 0.0.1
 ;; Keywords: languages
 
@@ -28,14 +28,6 @@
 ;;; Code:
 (require 'compile)
 (require 'cl-lib)
-
-;; Hack for old Emacs
-(unless (fboundp 'string-prefix-p)
-  (defun string-prefix-p (str1 str2 &optional ignore-case)
-    "Return non-nil if STR1 is a prefix of STR2.
-If IGNORE-CASE is non-nil, the comparison is done without paying attention
-to case differences."
-    (eq t (compare-strings str1 nil nil str2 0 (length str1) ignore-case))))
 
 (defgroup jonprl nil "Customization options for JonPRL"
   :prefix 'jonprl- :group 'languages)

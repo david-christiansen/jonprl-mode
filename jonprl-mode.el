@@ -74,14 +74,9 @@ to case differences."
   "Keywords for `jonprl-mode'.")
 
 (defconst jonprl-tactics
-  '("cum" "unit-elim" "prod-eq" "prod-intro" "prod-elim" "pair-eq"
-    "spread-eq" "fun-eq" "fun-intro" "fun-elim" "lam-eq" "ap-eq"
-    "isect-eq" "isect-intro" "isect-elim" "isect-member-eq"
-    "isect-member-case-eq" "witness" "hypothesis" "subst" "hyp-subst" "lemma"
-    "unfold" "refine" "subset-eq" "subset-intro" "subset-elim"
-    "subset-member-eq" "eq-eq" "auto" "univ-eq" "void-eq"
-    "void-elim" "unit-eq" "unit-intro" "ax-eq" "mem-unfold"
-    "assumption" "symmetry" "hyp-eq")
+  '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
+    "witness" "hypothesis" "subst" "hyp-subst" "lemma"
+    "unfold" "refine" "assumption" "symmetry")
   "A list of the tactics to be highlighted in JonPRL mode.")
 
 (defun jonprl-font-lock-defaults ()

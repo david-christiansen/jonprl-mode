@@ -62,7 +62,7 @@
   "The face used to highlight JonPRL comments."
   :group 'jonprl)
 
-(defconst jonprl-keywords '("Theorem" "Tactic" "=def=")
+(defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=")
   "Keywords for `jonprl-mode'.")
 
 (defconst jonprl-tactics
@@ -77,7 +77,6 @@
       (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
       ("<\\(\\w+\\)>" 1 'jonprl-name-face)
       ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face))))
-
 
 (defun jonprl--compilation-buffer-name-function (_mode)
   "Compute a buffer name for the jonprl-mode compilation buffer."

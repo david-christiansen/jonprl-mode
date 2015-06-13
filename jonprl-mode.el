@@ -126,6 +126,7 @@
   "A major mode for JonPRL files.
      \\{jonprl-mode-map}
 Invokes `jonprl-mode-hook'."
+  (setq-local comment-start "|||")
   (setq-local font-lock-defaults (jonprl-font-lock-defaults))
   (setq-local imenu-generic-expression
               '(("Definitions" "^\\s-*\\\[\\(.+\\)\\\]\\s-+=def=" 1)

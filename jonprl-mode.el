@@ -138,7 +138,7 @@ Invokes `jonprl-mode-hook'."
   (set-input-method "TeX"))
 
 ;;;###autoload
-(push '("\\.jonprl$" . jonprl-mode) auto-mode-alist)
+(push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)
 
 (provide 'jonprl-mode)
 ;;; jonprl-mode.el ends here

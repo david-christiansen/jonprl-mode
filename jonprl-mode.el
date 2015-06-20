@@ -135,6 +135,12 @@ Invokes `jonprl-mode-hook'."
   (setq-local indent-tabs-mode nil)
   (setq-local tab-width 2)
   (setq-local completion-at-point-functions '(jonprl-complete-at-point))
+  (setq-local syntax-propertize-function
+              (syntax-propertize-rules
+               (".*\\(|\\)||.+\\(
+\\)"
+                (1 "<")
+                (2 ">"))))
   (set-input-method "TeX"))
 
 ;;;###autoload

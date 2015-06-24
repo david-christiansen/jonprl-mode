@@ -122,6 +122,14 @@
                                                  jonprl-tactics))))
       (if (null candidates) () (list start end candidates)))))
 
+(defconst jonprl-parse-error-regexp
+  "\\(Fail: Parse error at \\)\\([^:]+\\):\\([0-9]+\\)\\.\\([0-9]+\\)-\\([0-9]+\\)\\.\\([0-9]+\\):"
+  "Regexp matching JonPRL parse errors.")
+
+(defconst jonprl-tactic-fail-regexp
+  "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
+  "Regexp matching JonPRL tactic failures.")
+
 ;;;###autoload
 (define-derived-mode jonprl-mode prog-mode "JonPRL"
   "A major mode for JonPRL files.
@@ -142,7 +150,17 @@ Invokes `jonprl-mode-hook'."
 \\)"
                 (1 "<")
                 (2 ">"))))
-  (set-input-method "TeX"))
+  (set-input-method "TeX")
+  (add-to-list 'compilation-error-regexp-alist-alist
+               `(jonprl-parse-error
+                 ,jonprl-parse-error-regexp
+                 2 (3 . 5) (4 . 6) 2))
+  (add-to-list 'compilation-error-regexp-alist-alist
+               `(jonprl-tactic-fail
+                 ,jonprl-tactic-fail-regexp
+                 2 (3 . 5) (4 . 6) 2 1 (7 'jonprl-tactic-face)))
+  (cl-pushnew 'jonprl-parse-error compilation-error-regexp-alist)
+  (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist))
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)

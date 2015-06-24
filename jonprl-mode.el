@@ -76,7 +76,7 @@
   "Calculate the font-lock defaults for `jonprl-mode'."
   `('((,(regexp-opt jonprl-keywords 'words) 0 'jonprl-keyword-face)
       (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
-      ("<\\(\\w+\\)>" 1 'jonprl-name-face)
+      ("<\\(\\w+\\(\\s-+\\w+\\)*\\)>" 1 'jonprl-name-face)
       ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face))))
 
 (defun jonprl--compilation-buffer-name-function (_mode)

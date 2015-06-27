@@ -72,6 +72,14 @@
     "ext")
   "A list of the tactics to be highlighted in JonPRL mode.")
 
+(defvar jonprl-mode-path nil
+  "Directory containing the `jonprl-mode' package.
+This is used to load resource files such as images.  The default
+value is automatically computed from the location of the Emacs
+Lisp package.")
+(setq jonprl-mode-path (file-name-directory load-file-name))
+
+
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
   `('((,(regexp-opt jonprl-keywords 'words) 0 'jonprl-keyword-face)
@@ -101,6 +109,14 @@
 (defvar jonprl-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-l") 'jonprl-check-buffer)
+    (define-key map [tool-bar sep] '(menu-item "--"))
+    (define-key-after map [tool-bar check-buffer]
+      `(menu-item "Check" jonprl-check-buffer
+                  :enable t
+                  :visible t
+                  :help "Check in JonPRL"
+                  :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
+      t)
     map))
 
 (defvar jonprl-mode-syntax-table
@@ -130,37 +146,10 @@
   "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
   "Regexp matching JonPRL tactic failures.")
 
-;;;###autoload
-(define-derived-mode jonprl-mode prog-mode "JonPRL"
-  "A major mode for JonPRL files.
-     \\{jonprl-mode-map}
-Invokes `jonprl-mode-hook'."
-  (setq-local comment-start "|||")
-  (setq-local font-lock-defaults (jonprl-font-lock-defaults))
-  (setq-local imenu-generic-expression
-              '(("Definitions" "^\\s-*\\\[\\(.+\\)\\\]\\s-+=def=" 1)
-                ("Theorems" "Theorem\\s-+\\(\\w+\\)" 1)
-                ("Operators" "Operator\\s-+\\(\\w+\\)" 1)))
-  (setq-local indent-tabs-mode nil)
-  (setq-local tab-width 2)
-  (setq-local completion-at-point-functions '(jonprl-complete-at-point))
-  (setq-local syntax-propertize-function
-              (syntax-propertize-rules
-               (".*\\(|\\)||.+\\(
-\\)"
-                (1 "<")
-                (2 ">"))))
-  (set-input-method "TeX")
-  (add-to-list 'compilation-error-regexp-alist-alist
-               `(jonprl-parse-error
-                 ,jonprl-parse-error-regexp
-                 2 (3 . 5) (4 . 6) 2))
-  (add-to-list 'compilation-error-regexp-alist-alist
-               `(jonprl-tactic-fail
-                 ,jonprl-tactic-fail-regexp
-                 2 (3 . 5) (4 . 6) 2 1 (7 'jonprl-tactic-face)))
-  (cl-pushnew 'jonprl-parse-error compilation-error-regexp-alist)
-  (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist))
+(easy-menu-define jonprl-mode-menu jonprl-mode-map
+  "Menu for JonPRL major mode"
+  `("JonPRL"
+    ["Check" jonprl-check-buffer t]))
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)

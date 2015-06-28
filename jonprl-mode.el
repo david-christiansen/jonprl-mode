@@ -151,8 +151,43 @@ Lisp package.")
   `("JonPRL"
     ["Check" jonprl-check-buffer t]))
 
+
+;;;###autoload
+(define-derived-mode jonprl-mode prog-mode "JonPRL"
+  "A major mode for JonPRL files.
+     \\{jonprl-mode-map}
+Invokes `jonprl-mode-hook'."
+  (setq-local comment-start "|||")
+  (setq-local font-lock-defaults (jonprl-font-lock-defaults))
+  (setq-local imenu-generic-expression
+              '(("Definitions" "^\\s-*\\\[\\(.+\\)\\\]\\s-+=def=" 1)
+                ("Theorems" "Theorem\\s-+\\(\\w+\\)" 1)
+                ("Operators" "Operator\\s-+\\(\\w+\\)" 1)))
+  (setq-local indent-tabs-mode nil)
+  (setq-local tab-width 2)
+  (setq-local completion-at-point-functions '(jonprl-complete-at-point))
+  (setq-local syntax-propertize-function
+              (syntax-propertize-rules
+               (".*\\(|\\)||.+\\(
+\\)"
+                (1 "<")
+                (2 ">"))))
+  (set-input-method "TeX")
+  (add-to-list 'compilation-error-regexp-alist-alist
+               `(jonprl-parse-error
+                 ,jonprl-parse-error-regexp
+                 2 (3 . 5) (4 . 6) 2))
+  (add-to-list 'compilation-error-regexp-alist-alist
+               `(jonprl-tactic-fail
+                 ,jonprl-tactic-fail-regexp
+                 2 (3 . 5) (4 . 6) 2 1 (7 'jonprl-tactic-face)))
+  (cl-pushnew 'jonprl-parse-error compilation-error-regexp-alist)
+  (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist))
+
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)
+
+
 
 (provide 'jonprl-mode)
 ;;; jonprl-mode.el ends here

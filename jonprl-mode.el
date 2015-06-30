@@ -66,10 +66,12 @@
   "Keywords for `jonprl-mode'.")
 
 (defconst jonprl-tactics
-  '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
-    "witness" "hypothesis" "subst" "hyp-subst" "lemma"
-    "unfold" "refine" "assumption" "symmetry" "trace"
-    "ext" "reduce")
+  (split-string
+   (substring
+    (shell-command-to-string
+     (concat jonprl-path " --list-tactics"))
+    0 -1)
+   "\n")
   "A list of the tactics to be highlighted in JonPRL mode.")
 
 (defvar jonprl-mode-path nil

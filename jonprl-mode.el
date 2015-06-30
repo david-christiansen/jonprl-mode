@@ -106,15 +106,58 @@ Lisp package.")
          (default-directory dir))
     (compile command)))
 
+(defconst jonprl-development-buffer-name "*JonPRL Development*"
+  "The name for the JonPRL development output buffer.")
+
+(defconst jonprl-development-mode-map
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map)
+    (define-key map "q" 'jonprl-development-quit)
+    map))
+
+(define-derived-mode jonprl-development-mode fundamental-mode "JonPRL Dev"
+  "Mode for JonPRL development output.
+\\{jonprl-development-mode-map}")
+
+(defun jonprl-print-development ()
+  "Print the explicit form of the current buffer as a JonPRL development."
+  (interactive)
+  (let ((file-name (buffer-file-name))
+        (view-read-only t)
+        (buffer (get-buffer-create jonprl-development-buffer-name)))
+    (pop-to-buffer buffer)
+    (with-current-buffer buffer
+      (jonprl-development-mode)
+      (read-only-mode 1)
+      (message "Press 'q' to close the development.")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (call-process "jonprl" nil t t file-name))
+      (goto-char (point-min)))))
+
+(defun jonprl-development-quit ()
+  "Exit the development buffer."
+  (interactive)
+  (let ((buffer (get-buffer jonprl-development-buffer-name)))
+    (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
+
 (defvar jonprl-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-l") 'jonprl-check-buffer)
+    (define-key map (kbd "C-c C-c") 'jonprl-print-development)
     (define-key map [tool-bar sep] '(menu-item "--"))
     (define-key-after map [tool-bar check-buffer]
       `(menu-item "Check" jonprl-check-buffer
                   :enable t
                   :visible t
                   :help "Check in JonPRL"
+                  :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
+      t)
+    (define-key-after map [tool-bar print-development]
+      `(menu-item "Print" jonprl-print-development
+                  :enable t
+                  :visible t
+                  :help "Print Development"
                   :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
       t)
     map))
@@ -149,7 +192,8 @@ Lisp package.")
 (easy-menu-define jonprl-mode-menu jonprl-mode-map
   "Menu for JonPRL major mode"
   `("JonPRL"
-    ["Check" jonprl-check-buffer t]))
+    ["Check" jonprl-check-buffer t]
+    ["Print development" jonprl-print-development t]))
 
 
 ;;;###autoload

@@ -69,7 +69,7 @@
   '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
     "witness" "hypothesis" "subst" "hyp-subst" "lemma"
     "unfold" "refine" "assumption" "symmetry" "trace"
-    "ext")
+    "ext" "reduce")
   "A list of the tactics to be highlighted in JonPRL mode.")
 
 (defvar jonprl-mode-path nil

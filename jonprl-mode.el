@@ -132,7 +132,7 @@ Lisp package.")
       (message "Press 'q' to close the development.")
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (call-process "jonprl" nil t t file-name))
+        (call-process jonprl-path nil t t file-name))
       (goto-char (point-min)))))
 
 (defun jonprl-development-quit ()

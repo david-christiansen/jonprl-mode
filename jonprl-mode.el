@@ -334,7 +334,8 @@ Lisp package.")
            (end (match-end 0))
            (candidates (cl-remove-if-not (apply-partially #'string-prefix-p match)
                                          (append jonprl-keywords
-                                                 jonprl-tactics))))
+                                                 jonprl-tactics
+                                                 jonprl-operators))))
       (if (null candidates) () (list start end candidates)))))
 
 

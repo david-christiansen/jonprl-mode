@@ -3,7 +3,7 @@
 ;; Copyright (C) 2015  David Raymond Christiansen
 
 ;; Author: David Raymond Christiansen <david@davidchristiansen.dk>
-;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.3") (cl-lib "0.5") (yasnippet "0.9.0.1")
 ;; Version: 0.0.1
 ;; Keywords: languages
 

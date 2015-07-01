@@ -99,12 +99,16 @@ This list is constructed from JonPRL's output.")
 
 (defun jonprl-highlight-operators (limit)
   "Search from point to LIMIT after an operator, setting the match data."
-  (re-search-forward (regexp-opt (mapcar #'car jonprl-operators) 'word) limit t))
+  (re-search-forward (regexp-opt (mapcar #'car jonprl-operators) 'words) limit t))
+
+(defun jonprl-highlight-tactics (limit)
+  "Search from point to LIMIT after a tactic, setting the match data."
+  (re-search-forward (regexp-opt (mapcar #'car jonprl-tactics) 'words) limit t))
 
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
   `('((,(regexp-opt jonprl-keywords 'words) 0 'jonprl-keyword-face)
-      (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
+      (jonprl-highlight-tactics 1 'jonprl-tactic-face)
       ("<\\(\\w+\\(\\s-+\\w+\\)*\\)>" 1 'jonprl-name-face)
       ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face)
       (jonprl-highlight-operators 1 'jonprl-operator-face))))
@@ -122,15 +126,37 @@ This list is constructed from JonPRL's output.")
          (condition-case nil
              (with-temp-buffer
                (call-process jonprl-path nil t nil " --list-tactics")
-               (split-string (buffer-string) nil t " +"))
+               (let ((tacs ()))
+                 (goto-char (point-min))
+                 (while (re-search-forward "^[ 	]*\\(?1:[a-zA-Z-_]+\\)\\(?:[ 	]+\\(?2:.*\\)\\)?$" nil t)
+                   (let ((tac-name (match-string 1))
+                         (tac-help (match-string 2)))
+                     (push (list tac-name tac-help) tacs)))
+                 tacs))
            ;; If JonPRL couldn't be run, fall back to something not
            ;; totally insane - either a previously-read tactic list
            ;; or some hard-coded tactics
            (error (if (null jonprl-tactics)
-                      '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
-                        "witness" "hypothesis" "subst" "hyp-subst" "lemma"
-                        "unfold" "refine" "assumption" "symmetry" "trace"
-                        "ext" "reduce")
+                      '(("cum" "@NUM?")
+                        ("trace" "\"MESSAGE\"")
+                        ("id" "fail")
+                        ("hyp-subst" "(←|→) #NUM [TERM] @NUM?")
+                        ("hypothesis" "#NUM")
+                        ("witness" "[TERM]")
+                        ("refine" "<NAME>")
+                        ("unfold" "<(NAME @NUM)+>")
+                        ("cut-lemma" "<NAME>")
+                        ("lemma" "<NAME>")
+                        ("reduce" "NUM?")
+                        ("mem-cd" "auto")
+                        ("assert" "[TERM] <NAME>?")
+                        ("cstruct" "assumption")
+                        ("csymmetry" "step")
+                        ("symmetry" "creflexivty")
+                        ("ext" "<NAME>? @LEVEL?")
+                        ("eq-cd" "[TERM*]? <NAME*>? @LEVEL?")
+                        ("elim" "#NUM [TERM]? <NAME*>?")
+                        ("intro" "[TERM]? #NUM? <NAME*>?"))
                     jonprl-tactics)))))
     (setq jonprl-tactics tactics-list)))
 
@@ -203,11 +229,18 @@ This list is constructed from JonPRL's output.")
 (defun jonprl-eldoc-function ()
   "Display the arity of the operator at point in the modeline."
   (let* ((op (thing-at-point 'symbol))
-         (arity (assoc op jonprl-operators)))
-    (when arity
-      (let ((op-name (car arity))
-            (valences (cdr arity)))
-        (concat op-name "(" (string-join (mapcar #'(lambda (arg) (format "%d" arg)) valences) ";") ")")))))
+         (arity (assoc op jonprl-operators))
+         (tac (assoc op jonprl-tactics)))
+    (cond (arity
+           (let ((op-name (car arity))
+                 (valences (cdr arity)))
+             (concat (propertize op-name 'face 'jonprl-operator-face)
+                     "(" (string-join (mapcar #'(lambda (arg) (format "%d" arg)) valences) ";") ")")))
+          (tac (concat (propertize (car tac) 'face 'jonprl-tactic-face)
+                       (if (cadr tac)
+                           (concat " " (cadr tac))
+                         "")))
+          (t nil))))
 
 
 
@@ -346,7 +379,7 @@ Lisp package.")
            (end (match-end 0))
            (candidates (cl-remove-if-not (apply-partially #'string-prefix-p match)
                                          (append jonprl-keywords
-                                                 jonprl-tactics
+                                                 (mapcar #'car jonprl-tactics)
                                                  (mapcar #'car jonprl-operators)))))
       (if (null candidates) () (list start end candidates)))))
 

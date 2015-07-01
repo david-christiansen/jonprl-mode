@@ -403,7 +403,8 @@ Invokes `jonprl-mode-hook'."
   
   ;; Enable Yasnippet integration
   ;; This is a customizable hook, hence the indirection.
-  (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t))
+  (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t)
+  (jonprl-update-operators))
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)

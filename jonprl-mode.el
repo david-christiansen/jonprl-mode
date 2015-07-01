@@ -366,6 +366,7 @@ Lisp package.")
     (modify-syntax-entry ?= "w" table)
     (modify-syntax-entry ?' "w" table)
     (modify-syntax-entry ?∈ "w" table)
+    (modify-syntax-entry ?⋂ "w" table)
     table))
 
 

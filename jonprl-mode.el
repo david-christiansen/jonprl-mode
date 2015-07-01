@@ -41,20 +41,20 @@
   :type 'file
   :group 'jonprl)
 
-(defcustom jonprl-mode-hook '(jonprl-update-snippets)
+(defcustom jonprl-mode-hook '(jonprl-update-operators)
   "The hook to run when initializing JonPRL mode."
   :type 'hook
   :group 'jonprl
-  :options '(yas-minor-mode jonprl-update-snippets))
+  :options '(yas-minor-mode jonprl-update-operators))
 
-(defcustom jonprl-mode-after-save-hook '(jonprl-update-snippets)
+(defcustom jonprl-mode-after-save-hook '(jonprl-update-operators)
   "The hook to run when saving JonPRL files.
-By default, this updates the snippets. If that gets too slow,
-remove `jonprl-update-snippets' from this hook and invoke it
+By default, this updates the snippets.  If that gets too slow,
+remove `jonprl-update-operators' from this hook and invoke it
 manually."
   :type 'hook
   :group 'jonprl
-  :options '(jonprl-update-snippets))
+  :options '(jonprl-update-operators))
 
 (defcustom jonprl-pre-check-buffer-hook '(save-buffer)
   "A hook to run prior to checking the buffer."
@@ -68,6 +68,10 @@ manually."
 
 (defface jonprl-tactic-face '((t (:inherit font-lock-function-name-face)))
   "The face used to highlight JonPRL tactics."
+  :group 'jonprl)
+
+(defface jonprl-operator-face '((t (:inherit font-lock-constant-face)))
+  "The face used to highlight JonPRL operators."
   :group 'jonprl)
 
 (defface jonprl-name-face '((t (:inherit font-lock-variable-name-face)))
@@ -88,12 +92,22 @@ manually."
   "A list of the tactics to be highlighted in JonPRL mode.
 This list is constructed from JonPRL's output.")
 
+(defvar jonprl-operators ()
+  "A list of the operators to be highlighted in JonPRL mode.
+This list is constructed from JonPRL's output.")
+(make-variable-buffer-local 'jonprl-operators)
+
+(defun jonprl-highlight-operators (limit)
+  "Search from point to LIMIT after an operator, setting the match data."
+  (re-search-forward (regexp-opt jonprl-operators 'word) limit t))
+
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
   `('((,(regexp-opt jonprl-keywords 'words) 0 'jonprl-keyword-face)
       (,(regexp-opt jonprl-tactics 'words) 0 'jonprl-tactic-face)
       ("<\\(\\w+\\(\\s-+\\w+\\)*\\)>" 1 'jonprl-name-face)
-      ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face))))
+      ("^\\s-*\\(|||.*\\)$" 1 'jonprl-comment-face)
+      (jonprl-highlight-operators 1 'jonprl-operator-face))))
 
 (defun jonprl--compilation-buffer-name-function (_mode)
   "Compute a buffer name for the jonprl-mode compilation buffer."
@@ -216,7 +230,7 @@ numbers."
   (with-current-buffer buffer
     (goto-char (point-min))
     (let ((ops ()))
-      (while (re-search-forward "^[ \\t]*\\(?1:[^ ()\\t]+\\)[ \\t]*(\\(?2:[^)]*\\))[ \\t]*$" nil t)
+      (while (re-search-forward "^[ 	]*\\(?1:[^ ()	]+\\)[ 	]*(\\(?2:[^)]*\\))[ 	]*$" nil t)
         (let ((op (match-string 1))
               (pre-arity (match-string 2)))
           (push (cons op (mapcar #'string-to-number
@@ -253,12 +267,13 @@ natural number."
                                    ))))
     (yas-define-snippets 'jonprl-mode snippet-defs)))
 
-(defun jonprl-update-snippets ()
+(defun jonprl-update-operators ()
   "Update the JonPRL snippets for the current buffer."
   (interactive)
   (let ((operators (jonprl-get-arities)))
     (when operators ;; don't throw away operators if buffer doesn't parse
-      (jonprl-define-snippets operators))))
+      (jonprl-define-snippets operators)
+      (setq jonprl-operators (mapcar #'car operators)))))
 
 
 ;;; Means of invoking commands: tool bar and keybindings

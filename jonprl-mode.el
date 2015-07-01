@@ -212,22 +212,19 @@ numbers."
   (let ((op-name (car arity))
         (arg-valences (cdr arity))
         (uniquifier 0))
-    (apply #'concat
-           (jonprl-snippet-escape op-name)
-           (if (null arg-valences)
-               '("")
-             (list
-              "("
-              (string-join
-               (mapcar #'(lambda (v)
-                           (concat
-                            (string-join
-                             (cl-loop for i from 0 to (- v 1)
-                                      collecting (format "${%d:var}."
-                                                         (incf uniquifier))))
-                            (format "${%d:term}" (incf uniquifier))))
-                       arg-valences) "; ")
-              ")")))))
+    (concat
+     (jonprl-snippet-escape op-name)
+     "("
+     (string-join
+      (mapcar #'(lambda (v)
+                  (concat
+                   (string-join
+                    (cl-loop for i from 0 to (- v 1)
+                             collecting (format "${%d:var}."
+                                                (incf uniquifier))))
+                   (format "${%d:term}" (incf uniquifier))))
+              arg-valences) "; ")
+     ")")))
 
 (defun jonprl-parse-arities (buffer)
   "Take a BUFFER containing operator arities and convert them to the list representation."
@@ -259,16 +256,17 @@ name and whose `cdr' is a list of valences.  A valence is a
 natural number."
   (let ((snippet-defs
          (cl-loop for op in operators
-                  collecting (list (car op) ;; key
-                                   (jonprl-arity-to-snippet op) ;; template
-                                   op ;; name
-                                   nil ;; condition
-                                   nil ;; group
-                                   nil ;; expand-env
-                                   nil ;; file
-                                   nil ;; keybinding
-                                   (concat "JonPRL-" (car op)) ;; uuid - we want to replace old definitions
-                                   ))))
+                  when (consp (cdr op)) ;; non-nullary
+                  collect (list (car op) ;; key
+                                (jonprl-arity-to-snippet op) ;; template
+                                op ;; name
+                                nil ;; condition
+                                nil ;; group
+                                nil ;; expand-env
+                                nil ;; file
+                                nil ;; keybinding
+                                (concat "JonPRL-" (car op)) ;; uuid - we want to replace old definitions
+                                ))))
     (yas-define-snippets 'jonprl-mode snippet-defs)))
 
 (defun jonprl-update-operators ()

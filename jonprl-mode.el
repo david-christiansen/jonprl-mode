@@ -30,6 +30,9 @@
 (require 'cl-lib)
 (require 'yasnippet)
 
+
+;;; Customization options and settings
+
 (defgroup jonprl nil "Customization options for JonPRL"
   :prefix 'jonprl- :group 'languages)
 
@@ -75,20 +78,15 @@ manually."
   "The face used to highlight JonPRL comments."
   :group 'jonprl)
 
+
+;;; Syntax highlighting
+
 (defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=")
   "Keywords for `jonprl-mode'.")
 
 (defvar jonprl-tactics ()
   "A list of the tactics to be highlighted in JonPRL mode.
 This list is constructed from JonPRL's output.")
-
-(defvar jonprl-mode-path nil
-  "Directory containing the `jonprl-mode' package.
-This is used to load resource files such as images.  The default
-value is automatically computed from the location of the Emacs
-Lisp package.")
-(when load-file-name
-  (setq jonprl-mode-path (file-name-directory load-file-name)))
 
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
@@ -121,6 +119,19 @@ Lisp package.")
                         "ext" "reduce")
                     jonprl-tactics)))))
     (setq jonprl-tactics tactics-list)))
+
+
+;;; Invoking JonPRL
+
+;; Compilation mode regexps, to be used for compilation mode
+(defconst jonprl-parse-error-regexp
+  "\\(Fail: Parse error at \\)\\([^:]+\\):\\([0-9]+\\)\\.\\([0-9]+\\)-\\([0-9]+\\)\\.\\([0-9]+\\):"
+  "Regexp matching JonPRL parse errors.")
+
+(defconst jonprl-tactic-fail-regexp
+  "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
+  "Regexp matching JonPRL tactic failures.")
+
 
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."
@@ -172,6 +183,9 @@ Lisp package.")
   (let ((buffer (get-buffer jonprl-development-buffer-name)))
     (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
 
+
+;;; yasnippet integration
+
 (defun jonprl-snippet-escape (string)
   "Replace the yasnippet special characters in STRING with their escaped forms."
   (replace-regexp-in-string "\\([`$\\]\\)" "\\\\\\1" string))
@@ -205,7 +219,7 @@ numbers."
       (while (re-search-forward "^[ \\t]*\\(?1:[^ ()\\t]+\\)[ \\t]*(\\(?2:[^)]*\\))[ \\t]*$" nil t)
         (let ((op (match-string 1))
               (pre-arity (match-string 2)))
-          (push (cons op (mapcar #'string-to-int
+          (push (cons op (mapcar #'string-to-number
                                  (split-string pre-arity ";" t "[ \\t]*")))
                 ops)))
       ops)))
@@ -246,6 +260,18 @@ natural number."
     (when operators ;; don't throw away operators if buffer doesn't parse
       (jonprl-define-snippets operators))))
 
+
+;;; Means of invoking commands: tool bar and keybindings
+
+(defvar jonprl-mode-path nil
+  "Directory containing the `jonprl-mode' package.
+This is used to load resource files such as images.  The default
+value is automatically computed from the location of the Emacs
+Lisp package.")
+(when load-file-name
+  (setq jonprl-mode-path (file-name-directory load-file-name)))
+
+
 (defvar jonprl-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-l") 'jonprl-check-buffer)
@@ -267,6 +293,9 @@ natural number."
       t)
     map))
 
+
+;;; Syntax table
+
 (defvar jonprl-mode-syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?- "w" table)
@@ -274,6 +303,9 @@ natural number."
     (modify-syntax-entry ?= "w" table)
     (modify-syntax-entry ?' "w" table)
     table))
+
+
+;;; Standard completion
 
 (defun jonprl-complete-at-point ()
   "Attempt to complete at point for JonPRL keywords and tactics."
@@ -286,19 +318,16 @@ natural number."
                                                  jonprl-tactics))))
       (if (null candidates) () (list start end candidates)))))
 
-(defconst jonprl-parse-error-regexp
-  "\\(Fail: Parse error at \\)\\([^:]+\\):\\([0-9]+\\)\\.\\([0-9]+\\)-\\([0-9]+\\)\\.\\([0-9]+\\):"
-  "Regexp matching JonPRL parse errors.")
-
-(defconst jonprl-tactic-fail-regexp
-  "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
-  "Regexp matching JonPRL tactic failures.")
-
+
+;;; Menus
 (easy-menu-define jonprl-mode-menu jonprl-mode-map
   "Menu for JonPRL major mode"
   `("JonPRL"
     ["Check" jonprl-check-buffer t]
     ["Print development" jonprl-print-development t]))
+
+
+;;; The mode itself
 
 (defun jonprl-mode-run-after-save-hook ()
   "Run JonPRL-specific operations when saving a file."
@@ -343,7 +372,6 @@ Invokes `jonprl-mode-hook'."
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)
-
 
 
 (provide 'jonprl-mode)

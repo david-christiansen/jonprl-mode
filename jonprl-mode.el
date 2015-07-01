@@ -65,19 +65,17 @@
 (defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=")
   "Keywords for `jonprl-mode'.")
 
-(defconst jonprl-tactics
-  '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
-    "witness" "hypothesis" "subst" "hyp-subst" "lemma"
-    "unfold" "refine" "assumption" "symmetry" "trace"
-    "ext" "reduce")
-  "A list of the tactics to be highlighted in JonPRL mode.")
+(defvar jonprl-tactics ()
+  "A list of the tactics to be highlighted in JonPRL mode.
+This list is constructed from JonPRL's output.")
 
 (defvar jonprl-mode-path nil
   "Directory containing the `jonprl-mode' package.
 This is used to load resource files such as images.  The default
 value is automatically computed from the location of the Emacs
 Lisp package.")
-(setq jonprl-mode-path (file-name-directory load-file-name))
+(when load-file-name
+  (setq jonprl-mode-path (file-name-directory load-file-name)))
 
 
 (defun jonprl-font-lock-defaults ()
@@ -90,6 +88,27 @@ Lisp package.")
 (defun jonprl--compilation-buffer-name-function (_mode)
   "Compute a buffer name for the jonprl-mode compilation buffer."
   "*JonPRL*")
+
+(defun jonprl-update-available-tactics ()
+  "Update the `jonprl-tactics' by asking JonPRL."
+  (interactive)
+  ;; Right now, JonPRL only lists the built-in tactics, so we don't
+  ;; pass it a file name. This should result in maximum speed.
+  (let ((tactics-list
+         (condition-case nil
+             (with-temp-buffer
+               (call-process jonprl-path nil t nil " --list-tactics")
+               (split-string (buffer-string) nil t " +"))
+           ;; If JonPRL couldn't be run, fall back to something not
+           ;; totally insane - either a previously-read tactic list
+           ;; or some hard-coded tactics
+           (error (if (null jonprl-tactics)
+                      '("cum" "auto" "intro" "elim" "mem-cd" "eq-cd"
+                        "witness" "hypothesis" "subst" "hyp-subst" "lemma"
+                        "unfold" "refine" "assumption" "symmetry" "trace"
+                        "ext" "reduce")
+                    jonprl-tactics)))))
+    (setq jonprl-tactics tactics-list)))
 
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."
@@ -202,6 +221,7 @@ Lisp package.")
      \\{jonprl-mode-map}
 Invokes `jonprl-mode-hook'."
   (setq-local comment-start "|||")
+  (jonprl-update-available-tactics)
   (setq-local font-lock-defaults (jonprl-font-lock-defaults))
   (setq-local imenu-generic-expression
               '(("Definitions" "^\\s-*\\\[\\(.+\\)\\\]\\s-+=def=" 1)

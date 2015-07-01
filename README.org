@@ -14,3 +14,7 @@ then require it.
 
 You may need to customize =jonprl-path= if the =jonprl= binary isn't
 already on your PATH.
+
+=jonprl-mode= reads the list of tactics to highlight from JonPRL
+itself. If you do something that changes the list of available
+tactics, restart =jonprl-mode= with =M-x jonprl-mode= to re-read them.

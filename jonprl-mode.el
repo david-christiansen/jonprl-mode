@@ -41,11 +41,11 @@
   :type 'file
   :group 'jonprl)
 
-(defcustom jonprl-mode-hook '(jonprl-update-operators)
+(defcustom jonprl-mode-hook '(jonprl-update-operators eldoc-mode)
   "The hook to run when initializing JonPRL mode."
   :type 'hook
   :group 'jonprl
-  :options '(yas-minor-mode jonprl-update-operators))
+  :options '(yas-minor-mode jonprl-update-operators eldoc-mode))
 
 (defcustom jonprl-mode-after-save-hook '(jonprl-update-operators)
   "The hook to run when saving JonPRL files.
@@ -99,7 +99,7 @@ This list is constructed from JonPRL's output.")
 
 (defun jonprl-highlight-operators (limit)
   "Search from point to LIMIT after an operator, setting the match data."
-  (re-search-forward (regexp-opt jonprl-operators 'word) limit t))
+  (re-search-forward (regexp-opt (mapcar #'car jonprl-operators) 'word) limit t))
 
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
@@ -198,6 +198,19 @@ This list is constructed from JonPRL's output.")
     (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
 
 
+;;; ElDoc
+
+(defun jonprl-eldoc-function ()
+  "Display the arity of the operator at point in the modeline."
+  (let* ((op (thing-at-point 'symbol))
+         (arity (assoc op jonprl-operators)))
+    (when arity
+      (let ((op-name (car arity))
+            (valences (cdr arity)))
+        (concat op-name "(" (string-join (mapcar #'(lambda (arg) (format "%d" arg)) valences) ";") ")")))))
+
+
+
 ;;; yasnippet integration
 
 (defun jonprl-snippet-escape (string)
@@ -275,7 +288,7 @@ natural number."
   (let ((operators (jonprl-get-arities)))
     (when operators ;; don't throw away operators if buffer doesn't parse
       (jonprl-define-snippets operators)
-      (setq jonprl-operators (mapcar #'car operators)))))
+      (setq jonprl-operators operators))))
 
 
 ;;; Means of invoking commands: tool bar and keybindings
@@ -319,6 +332,7 @@ Lisp package.")
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?= "w" table)
     (modify-syntax-entry ?' "w" table)
+    (modify-syntax-entry ?∈ "w" table)
     table))
 
 
@@ -333,7 +347,7 @@ Lisp package.")
            (candidates (cl-remove-if-not (apply-partially #'string-prefix-p match)
                                          (append jonprl-keywords
                                                  jonprl-tactics
-                                                 jonprl-operators))))
+                                                 (mapcar #'car jonprl-operators)))))
       (if (null candidates) () (list start end candidates)))))
 
 
@@ -384,6 +398,9 @@ Invokes `jonprl-mode-hook'."
   (cl-pushnew 'jonprl-parse-error compilation-error-regexp-alist)
   (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist)
 
+  ;; Eldoc
+  (setq-local eldoc-documentation-function 'jonprl-eldoc-function)
+  
   ;; Enable Yasnippet integration
   ;; This is a customizable hook, hence the indirection.
   (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t))

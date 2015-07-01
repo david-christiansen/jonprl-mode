@@ -16,11 +16,17 @@ You may need to customize =jonprl-path= if the =jonprl= binary isn't
 already on your PATH.
 
 ** Yasnippet integration
+
 =jonprl-mode= gets a list of defined operators from JonPRL and uses
 them to dynamically populate the Yasnippet snippet list. To enable
 this feature, add =yas-minor-mode= to your =jonprl-mode-hook=.
 
+If you use this, then you probably want to set =yas-triggers-in-field=
+to =t= to enable recursive expansion of operators.
+
+
 ** Dynamic highlighting of tactics
+
 =jonprl-mode= reads the list of tactics to highlight from JonPRL
 itself. If you do something that changes the list of available
 tactics, restart =jonprl-mode= with =M-x jonprl-mode= to re-read them.

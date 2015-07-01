@@ -212,18 +212,22 @@ numbers."
   (let ((op-name (car arity))
         (arg-valences (cdr arity))
         (uniquifier 0))
-    (concat (jonprl-snippet-escape op-name)
-            "("
-            (string-join
-             (mapcar #'(lambda (v)
-                         (concat
-                          (string-join
-                           (cl-loop for i from 0 to (- v 1)
-                                    collecting (format "${%d:var}."
-                                                       (incf uniquifier))))
-                          (format "${%d:term}" (incf uniquifier))))
-                     arg-valences) "; ")
-            ")")))
+    (apply #'concat
+           (jonprl-snippet-escape op-name)
+           (if (null arg-valences)
+               '("")
+             (list
+              "("
+              (string-join
+               (mapcar #'(lambda (v)
+                           (concat
+                            (string-join
+                             (cl-loop for i from 0 to (- v 1)
+                                      collecting (format "${%d:var}."
+                                                         (incf uniquifier))))
+                            (format "${%d:term}" (incf uniquifier))))
+                       arg-valences) "; ")
+              ")")))))
 
 (defun jonprl-parse-arities (buffer)
   "Take a BUFFER containing operator arities and convert them to the list representation."

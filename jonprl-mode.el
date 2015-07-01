@@ -28,17 +28,30 @@
 ;;; Code:
 (require 'compile)
 (require 'cl-lib)
+(require 'yasnippet)
 
 (defgroup jonprl nil "Customization options for JonPRL"
   :prefix 'jonprl- :group 'languages)
 
-(defcustom jonprl-path "jonprl" "The path to the jonprl executable."
+(defcustom jonprl-path "jonprl"
+  "The path to the jonprl executable."
   :type 'file
   :group 'jonprl)
 
-(defcustom jonprl-mode-hook () "The hook to run when initializing JonPRL mode."
+(defcustom jonprl-mode-hook '(jonprl-update-snippets)
+  "The hook to run when initializing JonPRL mode."
   :type 'hook
-  :group 'jonprl)
+  :group 'jonprl
+  :options '(yas-minor-mode jonprl-update-snippets))
+
+(defcustom jonprl-mode-after-save-hook '(jonprl-update-snippets)
+  "The hook to run when saving JonPRL files.
+By default, this updates the snippets. If that gets too slow,
+remove `jonprl-update-snippets' from this hook and invoke it
+manually."
+  :type 'hook
+  :group 'jonprl
+  :options '(jonprl-update-snippets))
 
 (defcustom jonprl-pre-check-buffer-hook '(save-buffer)
   "A hook to run prior to checking the buffer."
@@ -76,7 +89,6 @@ value is automatically computed from the location of the Emacs
 Lisp package.")
 (when load-file-name
   (setq jonprl-mode-path (file-name-directory load-file-name)))
-
 
 (defun jonprl-font-lock-defaults ()
   "Calculate the font-lock defaults for `jonprl-mode'."
@@ -160,6 +172,80 @@ Lisp package.")
   (let ((buffer (get-buffer jonprl-development-buffer-name)))
     (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
 
+(defun jonprl-snippet-escape (string)
+  "Replace the yasnippet special characters in STRING with their escaped forms."
+  (replace-regexp-in-string "\\([`$\\]\\)" "\\\\\\1" string))
+
+(defun jonprl-arity-to-snippet (arity)
+  "Convert an operator ARITY to a yasnippet definition.
+The `car' of ARITY should be a string, naming the operator, and
+the `cdr' should be a potentially-empty list of natural
+numbers."
+  (let ((op-name (car arity))
+        (arg-valences (cdr arity))
+        (uniquifier 0))
+    (concat (jonprl-snippet-escape op-name)
+            "("
+            (string-join
+             (mapcar #'(lambda (v)
+                         (concat
+                          (string-join
+                           (cl-loop for i from 0 to (- v 1)
+                                    collecting (format "${%d:var}."
+                                                       (incf uniquifier))))
+                          (format "${%d:term}" (incf uniquifier))))
+                     arg-valences) "; ")
+            ")")))
+
+(defun jonprl-parse-arities (buffer)
+  "Take a BUFFER containing operator arities and convert them to the list representation."
+  (with-current-buffer buffer
+    (goto-char (point-min))
+    (let ((ops ()))
+      (while (re-search-forward "^[ \\t]*\\(?1:[^ ()\\t]+\\)[ \\t]*(\\(?2:[^)]*\\))[ \\t]*$" nil t)
+        (let ((op (match-string 1))
+              (pre-arity (match-string 2)))
+          (push (cons op (mapcar #'string-to-int
+                                 (split-string pre-arity ";" t "[ \\t]*")))
+                ops)))
+      ops)))
+
+(defun jonprl-get-arities (&optional file)
+  "Get the operator arities from FILE.
+If FILE is nil, use the current buffer's file."
+  (unless file
+    (setq file (buffer-file-name (current-buffer))))
+  (with-temp-buffer
+    (call-process jonprl-path nil t t file "--list-operators")
+    (jonprl-parse-arities (current-buffer))))
+
+(defun jonprl-define-snippets (operators)
+  "Define a collection of yasnippet snippets for OPERATORS.
+OPERATORS must be a list of operator arity definitions.  An
+operator arity definition is a list whose `car' is an operator
+name and whose `cdr' is a list of valences.  A valence is a
+natural number."
+  (let ((snippet-defs
+         (cl-loop for op in operators
+                  collecting (list (car op) ;; key
+                                   (jonprl-arity-to-snippet op) ;; template
+                                   op ;; name
+                                   nil ;; condition
+                                   nil ;; group
+                                   nil ;; expand-env
+                                   nil ;; file
+                                   nil ;; keybinding
+                                   (concat "JonPRL-" (car op)) ;; uuid - we want to replace old definitions
+                                   ))))
+    (yas-define-snippets 'jonprl-mode snippet-defs)))
+
+(defun jonprl-update-snippets ()
+  "Update the JonPRL snippets for the current buffer."
+  (interactive)
+  (let ((operators (jonprl-get-arities)))
+    (when operators ;; don't throw away operators if buffer doesn't parse
+      (jonprl-define-snippets operators))))
+
 (defvar jonprl-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-l") 'jonprl-check-buffer)
@@ -214,6 +300,9 @@ Lisp package.")
     ["Check" jonprl-check-buffer t]
     ["Print development" jonprl-print-development t]))
 
+(defun jonprl-mode-run-after-save-hook ()
+  "Run JonPRL-specific operations when saving a file."
+  (run-hooks 'jonprl-mode-after-save-hook))
 
 ;;;###autoload
 (define-derived-mode jonprl-mode prog-mode "JonPRL"
@@ -246,7 +335,11 @@ Invokes `jonprl-mode-hook'."
                  ,jonprl-tactic-fail-regexp
                  2 (3 . 5) (4 . 6) 2 1 (7 'jonprl-tactic-face)))
   (cl-pushnew 'jonprl-parse-error compilation-error-regexp-alist)
-  (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist))
+  (cl-pushnew 'jonprl-tactic-fail compilation-error-regexp-alist)
+
+  ;; Enable Yasnippet integration
+  ;; This is a customizable hook, hence the indirection.
+  (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t))
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)

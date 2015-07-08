@@ -374,6 +374,9 @@ Lisp package.")
     (modify-syntax-entry ?' "w" table)
     (modify-syntax-entry ?∈ "w" table)
     (modify-syntax-entry ?⋂ "w" table)
+    (modify-syntax-entry ?\( "()1n" table)
+    (modify-syntax-entry ?*  ". 23n" table)
+    (modify-syntax-entry ?\) ")(4n" table)
     table))
 
 

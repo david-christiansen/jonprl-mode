@@ -30,6 +30,13 @@
 (require 'cl-lib)
 (require 'yasnippet)
 
+;; subr-x is allowed to fail because the relevant functions are also
+;; defined in jonprl-compat under a feature gate. subr-x was
+;; introduced in Emacs 24.4, and it would be nice to support 24.3 for now.
+(require 'subr-x nil t)
+
+(require 'jonprl-compat)
+
 
 ;;; Customization options and settings
 

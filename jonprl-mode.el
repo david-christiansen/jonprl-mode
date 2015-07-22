@@ -48,6 +48,22 @@
   :type 'file
   :group 'jonprl)
 
+(defcustom jonprl-pretty-symbols
+  '(("*" . ?×)
+   ("->" . ?→)
+   ("<>" . ?★)
+   ("=>" . ?⇒)
+   ("=def=" . ?≝)
+   ("base" . ?𝔻)
+   ("lam" . ?λ)
+   ("member" . ?∈)
+   ("nat" . ?ℕ)
+   ("unit" . ?𝟙)
+   ("void" . ?𝟘))
+  "Pretty replacement symbols for JonPRL syntax."
+  :type '(alist :value-type string :key-type character)
+  :group 'jonprl)
+
 (defcustom jonprl-mode-hook '(jonprl-update-operators eldoc-mode)
   "The hook to run when initializing JonPRL mode."
   :type 'hook
@@ -417,6 +433,7 @@ Invokes `jonprl-mode-hook'."
   (setq-local comment-start "|||")
   (jonprl-update-available-tactics)
   (setq-local font-lock-defaults (jonprl-font-lock-defaults))
+  (setq-local prettify-symbols-alist jonprl-pretty-symbols)
   (setq-local imenu-generic-expression
               '(("Definitions" "^\\s-*\\\[\\(.+\\)\\\]\\s-+=def=" 1)
                 ("Theorems" "Theorem\\s-+\\(\\w+\\)" 1)

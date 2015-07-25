@@ -59,7 +59,8 @@
    ("member" . ?∈)
    ("nat" . ?ℕ)
    ("unit" . ?𝟙)
-   ("void" . ?𝟘))
+   ("void" . ?𝟘)
+   ("|-" . ?⊢))
   "Pretty replacement symbols for JonPRL syntax."
   :type '(alist :value-type string :key-type character)
   :group 'jonprl)

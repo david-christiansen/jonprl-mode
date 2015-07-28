@@ -108,7 +108,6 @@ manually."
   "The face used to highlight JonPRL comments."
   :group 'jonprl)
 
-
 ;;; Syntax highlighting
 
 (defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval" "Search" "Infix" "Postfix" "Prefix")
@@ -464,7 +463,7 @@ Invokes `jonprl-mode-hook'."
 
   ;; Eldoc
   (setq-local eldoc-documentation-function 'jonprl-eldoc-function)
-  
+
   ;; Enable Yasnippet integration
   ;; This is a customizable hook, hence the indirection.
   (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t)

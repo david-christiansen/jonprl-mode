@@ -111,7 +111,7 @@ manually."
 
 ;;; Syntax highlighting
 
-(defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval")
+(defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval" "Search" "Infix" "Postfix" "Prefix")
   "Keywords for `jonprl-mode'.")
 
 (defvar jonprl-tactics ()

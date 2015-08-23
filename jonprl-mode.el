@@ -64,6 +64,7 @@
    ("void" . ?𝟘)
    ("^" . ?⌢)
    ("<:" . ?◃)
+   ("bot" . ?⊥)
    ("|-" . ?⊢))
   "Pretty replacement symbols for JonPRL syntax."
   :type '(alist :value-type string :key-type character)

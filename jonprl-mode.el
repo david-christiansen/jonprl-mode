@@ -62,6 +62,9 @@
    ("nat" . ?ℕ)
    ("unit" . ?𝟙)
    ("void" . ?𝟘)
+   ("^" . ?⌢)
+   ("<:" . ?◃)
+   ("bot" . ?⊥)
    ("|-" . ?⊢))
   "Pretty replacement symbols for JonPRL syntax."
   :type '(alist :value-type string :key-type character)
@@ -110,7 +113,7 @@ manually."
 
 ;;; Syntax highlighting
 
-(defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval" "Search" "Infix" "Postfix" "Prefix")
+(defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval" "Search" "Infix" "Postfix" "Prefix" "Resource" "Declare")
   "Keywords for `jonprl-mode'.")
 
 (defvar jonprl-tactics ()

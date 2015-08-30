@@ -133,6 +133,11 @@ This list is constructed from JonPRL's output.")
 This list is constructed from JonPRL's output.")
 (make-variable-buffer-local 'jonprl-operators)
 
+(defvar jonprl-configuration-file ()
+  "A configuration file for a JonPRL development.
+If set, this is passed to the JonPRL compilation command instead of the current file.")
+(make-variable-buffer-local 'jonprl-configuration-file)
+
 (defun jonprl-highlight-operators (limit)
   "Search from point to LIMIT after an operator, setting the match data."
   (re-search-forward (regexp-opt (mapcar #'car jonprl-operators) 'words) limit t))
@@ -209,14 +214,22 @@ This list is constructed from JonPRL's output.")
   "Regexp matching JonPRL tactic failures.")
 
 
+(defun jonprl-command-args (should-print)
+  (let* ((filename (buffer-file-name))
+         (file (file-name-nondirectory filename))
+         (config-file jonprl-configuration-file))
+    (concat
+     (if (not should-print) "--check " "")
+       (if config-file config-file file))))
+
+
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."
   (interactive)
   (run-hooks 'jonprl-pre-check-buffer-hook)
   (let* ((filename (buffer-file-name))
          (dir (file-name-directory filename))
-         (file (file-name-nondirectory filename))
-         (command (concat jonprl-path " --check " file))
+         (command (concat jonprl-path " " (jonprl-command-args nil)))
 
          ;; Emacs compile config stuff - these are special vars
          (compilation-buffer-name-function
@@ -240,8 +253,9 @@ This list is constructed from JonPRL's output.")
 (defun jonprl-print-development ()
   "Print the explicit form of the current buffer as a JonPRL development."
   (interactive)
-  (let ((file-name (buffer-file-name))
+  (let ((command-args (jonprl-command-args t))
         (view-read-only t)
+        (old-buffer (current-buffer))
         (buffer (get-buffer-create jonprl-development-buffer-name)))
     (pop-to-buffer buffer)
     (with-current-buffer buffer
@@ -250,8 +264,8 @@ This list is constructed from JonPRL's output.")
       (message "Press 'q' to close the development.")
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (call-process jonprl-path nil t t file-name))
-      (goto-char (point-min)))))
+        (call-process jonprl-path nil t t command-args))
+      )))
 
 (defun jonprl-development-quit ()
   "Exit the development buffer."

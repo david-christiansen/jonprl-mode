@@ -213,6 +213,51 @@ If set, this is passed to the JonPRL compilation command instead of the current 
   "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
   "Regexp matching JonPRL tactic failures.")
 
+;; The following code is cribbed from idris-ipkg-mode:
+;; Based on http://www.emacswiki.org/emacs/EmacsTags section "Finding tags files"
+;; That page is GPL, so this is OK to include
+(defun jonprl-find-file-upwards (suffix &optional allow-hidden)
+  "Recursively searches each parent directory starting from the
+directory of the current buffer filename or from
+`default-directory' if that's not found, looking for a file with
+name ending in SUFFIX.  Returns the paths to the matching files,
+or nil if not found."
+  (cl-labels
+      ((find-file-r (path)
+                    (let* ((parent (file-name-directory path))
+                           (matching (if parent
+                                         (jonprl-try-directory-files parent t (concat suffix "$"))
+                                       nil)))
+                      (cond
+                       (matching matching)
+                       ;; The parent of ~ is nil and the parent of / is itself.
+                       ;; Thus the terminating condition for not finding the file
+                       ;; accounts for both.
+                       ((or (null parent) (equal parent (directory-file-name parent))) nil) ; Not found
+                       (t (find-file-r (directory-file-name parent))))))) ; Continue
+    (let* ((file (buffer-file-name (current-buffer)))
+           (dir (if file (file-name-directory file) default-directory)))
+      (when dir
+        (cl-remove-if #'(lambda (f)
+                          (and (not allow-hidden)
+                               (string-prefix-p "." (file-name-nondirectory f))))
+                      (find-file-r dir))))))
+
+;; The following code is cribbed from idris-ipkg-mode
+(defun jonprl-try-directory-files (directory &optional full match nosort)
+  "Call `directory-files' with arguments DIRECTORY, FULL, MATCH,
+and NOSORT, but return the empty list on failure instead of
+throwing an error.
+See the docstring for `directory-files' for the meaning of the
+arguments."
+  ;; This wrapper is useful because some users can't read all the
+  ;; directories above the current working directory. In particular,
+  ;; /home is sometimes not readable.
+  (condition-case nil
+      (directory-files directory full match nosort)
+    (error nil)))
+
+
 (defun jonprl-command-args (should-print)
   (let* ((filename (buffer-file-name))
          (file (file-name-nondirectory filename))
@@ -227,9 +272,20 @@ If set, this is passed to the JonPRL compilation command instead of the current 
   (setq jonprl-configuration-file nil)
   (message "Configuration file unset"))
 
+(defun jonprl-read-configuration-file ()
+  (let ((cfg-prompt "Set configuration file:")
+        (cfg-default (jonprl-find-file-upwards "cfg")))
+    (if cfg-default
+      (read-file-name cfg-prompt
+                      (file-name-directory (car cfg-default))
+                      (car cfg-default)
+                      t
+                      (file-name-nondirectory (car cfg-default)))
+      (read-file-name cfg-prompt nil nil nil t))))
+
 (defun jonprl-set-configuration-file (filename)
   "Choose a configuration file for your JonPRL development"
-  (interactive (list (read-file-name "Set configuration file:")))
+  (interactive (list (jonprl-read-configuration-file)))
   (setq jonprl-configuration-file filename)
   (message (concat "Configuration file set to " filename)))
 
@@ -237,7 +293,7 @@ If set, this is passed to the JonPRL compilation command instead of the current 
   (interactive)
   (unless jonprl-configuration-file
     (if (y-or-n-p "Do you want to choose a .cfg file?")
-      (jonprl-set-configuration-file (read-file-name "Set configuration file:"))
+      (jonprl-set-configuration-file (jonprl-read-configuration-file))
       (setq jonprl-configuration-file 'shut-up))))
 
 (defun jonprl-check-buffer ()

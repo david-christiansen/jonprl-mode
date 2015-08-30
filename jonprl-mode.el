@@ -275,13 +275,14 @@ arguments."
 (defun jonprl-read-configuration-file ()
   (let ((cfg-prompt "Set configuration file:")
         (cfg-default (jonprl-find-file-upwards "cfg")))
-    (if cfg-default
-      (read-file-name cfg-prompt
-                      (file-name-directory (car cfg-default))
-                      (car cfg-default)
-                      t
-                      (file-name-nondirectory (car cfg-default)))
-      (read-file-name cfg-prompt nil nil nil t))))
+    (expand-file-name
+      (if cfg-default
+        (read-file-name cfg-prompt
+                        (file-name-directory (car cfg-default))
+                        (car cfg-default)
+                        t
+                        (file-name-nondirectory (car cfg-default)))
+        (read-file-name cfg-prompt nil nil nil t)))))
 
 (defun jonprl-set-configuration-file (filename)
   "Choose a configuration file for your JonPRL development"

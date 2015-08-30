@@ -213,15 +213,25 @@ If set, this is passed to the JonPRL compilation command instead of the current 
   "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
   "Regexp matching JonPRL tactic failures.")
 
-
 (defun jonprl-command-args (should-print)
   (let* ((filename (buffer-file-name))
          (file (file-name-nondirectory filename))
          (config-file jonprl-configuration-file))
     (concat
      (if (not should-print) "--check " "")
-       (if config-file config-file file))))
+       (if (or (not config-file) (equal config-file 'shut-up)) file config-file))))
 
+(defun jonprl-forget-configuration ()
+  "Forgets the configuration file"
+  (interactive)
+  (setq jonprl-configuration-file nil)
+  (message "Configuration file unset"))
+
+(defun jonprl-set-configuration-file (filename)
+  "Choose a configuration file for your JonPRL development"
+  (interactive (list (read-file-name "Set configuration file:")))
+  (setq jonprl-configuration-file filename)
+  (message (concat "Configuration file set to " filename)))
 
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."

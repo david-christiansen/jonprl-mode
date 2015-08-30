@@ -85,11 +85,11 @@ manually."
   :group 'jonprl
   :options '(jonprl-update-operators))
 
-(defcustom jonprl-pre-check-buffer-hook '(save-buffer)
+(defcustom jonprl-pre-check-buffer-hook '(save-buffer jonprl-initialize-configuration)
   "A hook to run prior to checking the buffer."
   :type 'hook
   :group 'jonprl
-  :options '(save-buffer))
+  :options '(save-buffer jonprl-initialize-configuration))
 
 (defface jonprl-keyword-face '((t (:inherit font-lock-keyword-face)))
   "The face used to highlight JonPRL keywords."
@@ -232,6 +232,13 @@ If set, this is passed to the JonPRL compilation command instead of the current 
   (interactive (list (read-file-name "Set configuration file:")))
   (setq jonprl-configuration-file filename)
   (message (concat "Configuration file set to " filename)))
+
+(defun jonprl-initialize-configuration ()
+  (interactive)
+  (unless jonprl-configuration-file
+    (if (y-or-n-p "Do you want to choose a .cfg file?")
+      (jonprl-set-configuration-file (read-file-name "Set configuration file:"))
+      (setq jonprl-configuration-file 'shut-up))))
 
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."

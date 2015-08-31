@@ -244,6 +244,9 @@ or nil if not found."
                       (find-file-r dir))))))
 
 (defun jonprl-command-args (should-print)
+  "Compute the arguments to be passed to JonPRL, based on the (optional)
+  configuration tile. The development will be checked silently unless
+  'should-print' is true."
   (let* ((filename (buffer-file-name))
          (file (file-name-nondirectory filename))
          (config-file jonprl-configuration-file))
@@ -252,12 +255,14 @@ or nil if not found."
        (if (or (not config-file) (equal config-file 'shut-up)) file config-file))))
 
 (defun jonprl-forget-configuration ()
-  "Forgets the configuration file"
+  "Forget the configuration file"
   (interactive)
   (setq jonprl-configuration-file nil)
   (message "Configuration file unset"))
 
 (defun jonprl-read-configuration-file ()
+  "Prompt the user for a configuration file, prepopulating with a .cfg file in
+  the current directory or above, if possible."
   (let ((cfg-prompt "Set configuration file:")
         (cfg-default (jonprl-find-file-upwards "cfg")))
     (expand-file-name
@@ -276,6 +281,7 @@ or nil if not found."
   (message (concat "Configuration file set to " filename)))
 
 (defun jonprl-initialize-configuration ()
+  "Check if a configuration file is loaded, and if not, prompt the user to choose one."
   (interactive)
   (unless jonprl-configuration-file
     (if (y-or-n-p "Do you want to choose a .cfg file?")

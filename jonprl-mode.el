@@ -37,7 +37,7 @@
 
 (require 'jonprl-compat)
 
-
+
 ;;; Customization options and settings
 
 (defgroup jonprl nil "Customization options for JonPRL"
@@ -201,7 +201,7 @@ If set, this is passed to the JonPRL compilation command instead of the current 
                     jonprl-tactics)))))
     (setq jonprl-tactics tactics-list)))
 
-
+
 ;;; Invoking JonPRL
 
 ;; Compilation mode regexps, to be used for compilation mode
@@ -324,8 +324,7 @@ or nil if not found."
       (message "Press 'q' to close the development.")
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (call-process jonprl-path nil t t command-args))
-      )))
+        (call-process jonprl-path nil t t command-args)))))
 
 (defun jonprl-development-quit ()
   "Exit the development buffer."
@@ -333,7 +332,7 @@ or nil if not found."
   (let ((buffer (get-buffer jonprl-development-buffer-name)))
     (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
 
-
+
 ;;; ElDoc
 
 (defun jonprl-eldoc-function ()
@@ -353,7 +352,7 @@ or nil if not found."
           (t nil))))
 
 
-
+
 ;;; yasnippet integration
 
 (defun jonprl-snippet-escape (string)
@@ -433,7 +432,7 @@ natural number."
       (jonprl-define-snippets operators)
       (setq jonprl-operators operators))))
 
-
+
 ;;; Means of invoking commands: tool bar and keybindings
 
 (defvar jonprl-mode-path nil
@@ -466,7 +465,7 @@ Lisp package.")
       t)
     map))
 
-
+
 ;;; Syntax table
 
 (defvar jonprl-mode-syntax-table
@@ -482,7 +481,7 @@ Lisp package.")
     (modify-syntax-entry ?\) ")(4n" table)
     table))
 
-
+
 ;;; Standard completion
 
 (defun jonprl-complete-at-point ()
@@ -497,7 +496,7 @@ Lisp package.")
                                                  (mapcar #'car jonprl-operators)))))
       (if (null candidates) () (list start end candidates)))))
 
-
+
 ;;; Menus
 (easy-menu-define jonprl-mode-menu jonprl-mode-map
   "Menu for JonPRL major mode"
@@ -505,7 +504,7 @@ Lisp package.")
     ["Check" jonprl-check-buffer t]
     ["Print development" jonprl-print-development t]))
 
-
+
 ;;; The mode itself
 
 (defun jonprl-mode-run-after-save-hook ()

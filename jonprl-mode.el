@@ -85,11 +85,11 @@ manually."
   :group 'jonprl
   :options '(jonprl-update-operators))
 
-(defcustom jonprl-pre-check-buffer-hook '(save-buffer jonprl-initialize-configuration)
+(defcustom jonprl-pre-check-buffer-hook '(save-buffer)
   "A hook to run prior to checking the buffer."
   :type 'hook
   :group 'jonprl
-  :options '(save-buffer jonprl-initialize-configuration))
+  :options '(save-buffer))
 
 (defface jonprl-keyword-face '((t (:inherit font-lock-keyword-face)))
   "The face used to highlight JonPRL keywords."
@@ -301,6 +301,7 @@ arguments."
   "Load the current file into JonPRL."
   (interactive)
   (run-hooks 'jonprl-pre-check-buffer-hook)
+  (jonprl-initialize-configuration)
   (let* ((filename (buffer-file-name))
          (dir (file-name-directory filename))
          (command (concat jonprl-path " " (jonprl-command-args nil)))

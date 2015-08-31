@@ -226,7 +226,7 @@ or nil if not found."
       ((find-file-r (path)
                     (let* ((parent (file-name-directory path))
                            (matching (if parent
-                                         (jonprl-try-directory-files parent t (concat suffix "$"))
+                                         (ignore-errors (directory-files parent t (concat suffix "$")))
                                        nil)))
                       (cond
                        (matching matching)
@@ -242,21 +242,6 @@ or nil if not found."
                           (and (not allow-hidden)
                                (string-prefix-p "." (file-name-nondirectory f))))
                       (find-file-r dir))))))
-
-;; The following code is cribbed from idris-ipkg-mode
-(defun jonprl-try-directory-files (directory &optional full match nosort)
-  "Call `directory-files' with arguments DIRECTORY, FULL, MATCH,
-and NOSORT, but return the empty list on failure instead of
-throwing an error.
-See the docstring for `directory-files' for the meaning of the
-arguments."
-  ;; This wrapper is useful because some users can't read all the
-  ;; directories above the current working directory. In particular,
-  ;; /home is sometimes not readable.
-  (condition-case nil
-      (directory-files directory full match nosort)
-    (error nil)))
-
 
 (defun jonprl-command-args (should-print)
   (let* ((filename (buffer-file-name))

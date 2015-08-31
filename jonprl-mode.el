@@ -116,6 +116,14 @@ manually."
 (defconst jonprl-keywords '("Theorem" "Tactic" "Operator" "=def=" "Print" "Eval" "Search" "Infix" "Postfix" "Prefix" "Resource" "Declare")
   "Keywords for `jonprl-mode'.")
 
+(defconst jonprl-vernacular-snippets
+   (list
+     (list "-thm" "Theorem $1 : [$2] {\n  $3\n}.\n" nil nil nil '((yas-indent-line 'fixed) (yas-wrap-around-region 'nil)) nil nil "JonPRL-Vernacular-Theorem")
+     (list "-op" "Operator $1 : ($2).\n" nil nil nil nil nil nil "JonPRL-Verncular-Operator")
+     (list "-def" "[$1] =def= [$2].\n" nil nil nil nil nil nil "JonPRL-Vernacular-Definition")
+     (list "-wf" "Resource wf += { wf-lemma <$1> }.\n" nil nil nil nil nil nil "JonPRL-Vernacular-WF-Resource"))
+   "yasnippet snippet defs for JonPRL's vernacular language")
+
 (defvar jonprl-tactics ()
   "A list of the tactics to be highlighted in JonPRL mode.
 This list is constructed from JonPRL's output.")
@@ -470,6 +478,7 @@ Invokes `jonprl-mode-hook'."
   ;; Enable Yasnippet integration
   ;; This is a customizable hook, hence the indirection.
   (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t)
+  (yas-define-snippets 'jonprl-mode jonprl-vernacular-snippets)
   (jonprl-update-operators))
 
 ;;;###autoload

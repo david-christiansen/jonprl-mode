@@ -37,7 +37,7 @@
 
 (require 'jonprl-compat)
 
-
+
 ;;; Customization options and settings
 
 (defgroup jonprl nil "Customization options for JonPRL"
@@ -133,6 +133,11 @@ This list is constructed from JonPRL's output.")
 This list is constructed from JonPRL's output.")
 (make-variable-buffer-local 'jonprl-operators)
 
+(defvar jonprl-configuration-file ()
+  "A configuration file for a JonPRL development.
+If set, this is passed to the JonPRL compilation command instead of the current file.")
+(make-variable-buffer-local 'jonprl-configuration-file)
+
 (defun jonprl-highlight-operators (limit)
   "Search from point to LIMIT after an operator, setting the match data."
   (re-search-forward (regexp-opt (mapcar #'car jonprl-operators) 'words) limit t))
@@ -196,7 +201,7 @@ This list is constructed from JonPRL's output.")
                     jonprl-tactics)))))
     (setq jonprl-tactics tactics-list)))
 
-
+
 ;;; Invoking JonPRL
 
 ;; Compilation mode regexps, to be used for compilation mode
@@ -208,15 +213,89 @@ This list is constructed from JonPRL's output.")
   "\\[\\(?1:\\(?2:[^:]+\\):\\(?3:[0-9]+\\)\\.\\(?4:[0-9]+\\)-\\(?5:[0-9]+\\)\\.\\(?6:[0-9]+\\)\\)\\]: tactic '\\(?7:.+\\)' failed with goal:"
   "Regexp matching JonPRL tactic failures.")
 
+;; The following code is cribbed from idris-ipkg-mode:
+;; Based on http://www.emacswiki.org/emacs/EmacsTags section "Finding tags files"
+;; That page is GPL, so this is OK to include
+(defun jonprl-find-file-upwards (suffix &optional allow-hidden)
+  "Recursively searches each parent directory starting from the
+directory of the current buffer filename or from
+`default-directory' if that's not found, looking for a file with
+name ending in SUFFIX.  Returns the paths to the matching files,
+or nil if not found."
+  (cl-labels
+      ((find-file-r (path)
+                    (let* ((parent (file-name-directory path))
+                           (matching (if parent
+                                         (ignore-errors (directory-files parent t (concat suffix "$")))
+                                       nil)))
+                      (cond
+                       (matching matching)
+                       ;; The parent of ~ is nil and the parent of / is itself.
+                       ;; Thus the terminating condition for not finding the file
+                       ;; accounts for both.
+                       ((or (null parent) (equal parent (directory-file-name parent))) nil) ; Not found
+                       (t (find-file-r (directory-file-name parent))))))) ; Continue
+    (let* ((file (buffer-file-name (current-buffer)))
+           (dir (if file (file-name-directory file) default-directory)))
+      (when dir
+        (cl-remove-if #'(lambda (f)
+                          (and (not allow-hidden)
+                               (string-prefix-p "." (file-name-nondirectory f))))
+                      (find-file-r dir))))))
+
+(defun jonprl-command-args (should-print)
+  "Compute the arguments to be passed to JonPRL, based on the (optional)
+  configuration tile. The development will be checked silently unless
+  'should-print' is true."
+  (let* ((filename (buffer-file-name))
+         (file (file-name-nondirectory filename))
+         (config-file jonprl-configuration-file))
+    (concat
+     (if (not should-print) "--check " "")
+       (if (or (not config-file) (equal config-file 'shut-up)) file config-file))))
+
+(defun jonprl-forget-configuration ()
+  "Forget the configuration file"
+  (interactive)
+  (setq jonprl-configuration-file nil)
+  (message "Configuration file unset"))
+
+(defun jonprl-read-configuration-file ()
+  "Prompt the user for a configuration file, prepopulating with a .cfg file in
+  the current directory or above, if possible."
+  (let ((cfg-prompt "Set configuration file:")
+        (cfg-default (jonprl-find-file-upwards "cfg")))
+    (expand-file-name
+      (if cfg-default
+        (read-file-name cfg-prompt
+                        (file-name-directory (car cfg-default))
+                        (car cfg-default)
+                        t
+                        (file-name-nondirectory (car cfg-default)))
+        (read-file-name cfg-prompt nil nil nil t)))))
+
+(defun jonprl-set-configuration-file (filename)
+  "Choose a configuration file for your JonPRL development"
+  (interactive (list (jonprl-read-configuration-file)))
+  (setq jonprl-configuration-file filename)
+  (message (concat "Configuration file set to " filename)))
+
+(defun jonprl-initialize-configuration ()
+  "Check if a configuration file is loaded, and if not, prompt the user to choose one."
+  (interactive)
+  (unless jonprl-configuration-file
+    (if (y-or-n-p "Do you want to choose a .cfg file?")
+      (jonprl-set-configuration-file (jonprl-read-configuration-file))
+      (setq jonprl-configuration-file 'shut-up))))
 
 (defun jonprl-check-buffer ()
   "Load the current file into JonPRL."
   (interactive)
   (run-hooks 'jonprl-pre-check-buffer-hook)
+  (jonprl-initialize-configuration)
   (let* ((filename (buffer-file-name))
          (dir (file-name-directory filename))
-         (file (file-name-nondirectory filename))
-         (command (concat jonprl-path " --check " file))
+         (command (concat jonprl-path " " (jonprl-command-args nil)))
 
          ;; Emacs compile config stuff - these are special vars
          (compilation-buffer-name-function
@@ -240,8 +319,9 @@ This list is constructed from JonPRL's output.")
 (defun jonprl-print-development ()
   "Print the explicit form of the current buffer as a JonPRL development."
   (interactive)
-  (let ((file-name (buffer-file-name))
+  (let ((command-args (jonprl-command-args t))
         (view-read-only t)
+        (old-buffer (current-buffer))
         (buffer (get-buffer-create jonprl-development-buffer-name)))
     (pop-to-buffer buffer)
     (with-current-buffer buffer
@@ -250,8 +330,7 @@ This list is constructed from JonPRL's output.")
       (message "Press 'q' to close the development.")
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (call-process jonprl-path nil t t file-name))
-      (goto-char (point-min)))))
+        (call-process jonprl-path nil t t command-args)))))
 
 (defun jonprl-development-quit ()
   "Exit the development buffer."
@@ -259,7 +338,7 @@ This list is constructed from JonPRL's output.")
   (let ((buffer (get-buffer jonprl-development-buffer-name)))
     (when (and buffer (buffer-live-p buffer)) (kill-buffer buffer))))
 
-
+
 ;;; ElDoc
 
 (defun jonprl-eldoc-function ()
@@ -279,7 +358,7 @@ This list is constructed from JonPRL's output.")
           (t nil))))
 
 
-
+
 ;;; yasnippet integration
 
 (defun jonprl-snippet-escape (string)
@@ -359,7 +438,7 @@ natural number."
       (jonprl-define-snippets operators)
       (setq jonprl-operators operators))))
 
-
+
 ;;; Means of invoking commands: tool bar and keybindings
 
 (defvar jonprl-mode-path nil
@@ -392,7 +471,7 @@ Lisp package.")
       t)
     map))
 
-
+
 ;;; Syntax table
 
 (defvar jonprl-mode-syntax-table
@@ -408,7 +487,7 @@ Lisp package.")
     (modify-syntax-entry ?\) ")(4n" table)
     table))
 
-
+
 ;;; Standard completion
 
 (defun jonprl-complete-at-point ()
@@ -423,7 +502,7 @@ Lisp package.")
                                                  (mapcar #'car jonprl-operators)))))
       (if (null candidates) () (list start end candidates)))))
 
-
+
 ;;; Menus
 (easy-menu-define jonprl-mode-menu jonprl-mode-map
   "Menu for JonPRL major mode"
@@ -431,7 +510,7 @@ Lisp package.")
     ["Check" jonprl-check-buffer t]
     ["Print development" jonprl-print-development t]))
 
-
+
 ;;; The mode itself
 
 (defun jonprl-mode-run-after-save-hook ()

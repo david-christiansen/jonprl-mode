@@ -454,24 +454,28 @@ Lisp package.")
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-l") 'jonprl-check-buffer)
     (define-key map (kbd "C-c C-c") 'jonprl-print-development)
-    (define-key map [tool-bar sep] '(menu-item "--"))
-    (define-key-after map [tool-bar check-buffer]
-      `(menu-item "Check" jonprl-check-buffer
-                  :enable t
-                  :visible t
-                  :help "Check in JonPRL"
-                  :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
-      t)
-    (define-key-after map [tool-bar print-development]
-      `(menu-item "Print" jonprl-print-development
-                  :enable t
-                  :visible t
-                  :help "Print Development"
-                  :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
-      t)
     map))
 
+;; When the icon is supported, build a toolbar. This avoids problems
+;; on console versions of Emacs that don't have PNG support.
+(when (image-type-available-p 'png)
+  (define-key jonprl-mode-map [tool-bar sep] '(menu-item "--"))
+  (define-key-after jonprl-mode-map [tool-bar check-buffer]
+    `(menu-item "Check" jonprl-check-buffer
+                :enable t
+                :visible t
+                :help "Check in JonPRL"
+                :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
+    t)
+  (define-key-after jonprl-mode-map [tool-bar print-development]
+    `(menu-item "Print" jonprl-print-development
+                :enable t
+                :visible t
+                :help "Print Development"
+                :image ,(create-image (concat jonprl-mode-path "jonprl-icon.png")))
+    t))
 
+
 ;;; Syntax table
 
 (defvar jonprl-mode-syntax-table

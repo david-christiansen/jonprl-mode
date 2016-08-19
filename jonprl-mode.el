@@ -558,7 +558,21 @@ Invokes `jonprl-mode-hook'."
   ;; This is a customizable hook, hence the indirection.
   (add-hook 'after-save-hook 'jonprl-mode-run-after-save-hook t t)
   (yas-define-snippets 'jonprl-mode jonprl-vernacular-snippets)
-  (jonprl-update-operators))
+  (jonprl-update-operators)
+
+  (eval-after-load 'flycheck
+    '(progn
+       (flycheck-define-checker jonprl
+                                "A JonPRL proof checker."
+                                :command ("jonprl" source)
+                                :error-patterns
+                                ((error line-start
+                                        "[" (file-name) ":" line "." column "-" (+ num) "." (+ num) "]: "
+                                        (message (+ anything))
+                                        line-end))
+                                :modes jonprl-mode)
+
+       (add-to-list 'flycheck-checkers 'jonprl))))
 
 ;;;###autoload
 (push '("\\.jonprl\\'" . jonprl-mode) auto-mode-alist)

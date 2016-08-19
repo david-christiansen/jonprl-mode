@@ -278,7 +278,8 @@ or nil if not found."
   "Choose a configuration file for your JonPRL development"
   (interactive (list (jonprl-read-configuration-file)))
   (setq jonprl-configuration-file filename)
-  (message (concat "Configuration file set to " filename)))
+  (message (concat "Configuration file set to " filename))
+  (jonprl-update-operators))
 
 (defun jonprl-initialize-configuration ()
   "Check if a configuration file is loaded, and if not, prompt the user to choose one."
@@ -433,7 +434,7 @@ natural number."
 (defun jonprl-update-operators ()
   "Update the JonPRL snippets for the current buffer."
   (interactive)
-  (let ((operators (jonprl-get-arities)))
+  (let ((operators (jonprl-get-arities jonprl-configuration-file)))
     (when operators ;; don't throw away operators if buffer doesn't parse
       (jonprl-define-snippets operators)
       (setq jonprl-operators operators))))
